@@ -187,14 +187,49 @@
   (_fun [major : (_ptr o _int)] [minor : (_ptr o _int)] [patch : (_ptr o _int)]
       -> (_ : _void) -> (values major minor patch)))
 
-; get correct zmq_msg_t / _msg size depending on c library version
+; set of versions and zmq_msg_t sizes from a repo with remotes
+; https://github.com/zeromq/libzmq.git
+; https://github.com/zeromq/zeromq3-x.git
+; https://github.com/zeromq/zeromq4-x.git
+; https://github.com/zeromq/zeromq4-1.git
+;
+; tag version size
+;
+; master 4.2.0 64
+; v4.1.5 4.1.5 64
+; v4.1.4 4.1.4 64
+; v4.1.3 4.1.3 64
+; v4.1.2 4.1.2 64
+; v4.1.1 4.1.1 64
+; v4.1.0 4.1.0 48
+; v4.0.9 4.0.9 32
+; v4.0.8 4.0.8 32
+; v4.0.7 4.0.7 32
+; v4.0.6 4.0.6 32
+; v4.0.5 4.0.5 32
+; v4.0.4 4.0.4 32
+; v4.0.3 4.0.3 32
+; v4.0.2 4.0.2 32
+; v4.0.1 4.0.1 32
+; v4.0.0 4.0.0 32
+; v3.2.5 3.2.5 32
+; v3.2.4 3.2.4 32
+; v3.2.3 3.2.3 32
+; v3.2.2 3.2.2 32
+; v3.2.1 3.2.1 32
+; v3.1.0 3.1.0 32
+
+; get correct zmq_msg_t / _msg size depending on c library version ideally this
+; would c compile 'sizeof(zmq_msg_t)' and get the correct size. But I beat my
+; head on that for quite a while and didn't come right.
 (define msg-struct-size
   (let-values ([(major minor patch) (zmq-version)])
     (cond
-      [(<= major 3) 32]; was also 36 earlier in 3.0.0
-      [(and (= major 4) (= minor 0)) 32]
-      [(and (= major 4) (= minor 1)) 48] ; was also 40 for a while, no idea of patch versions
-      [(and (>= major 4) (>= minor 2)) 64] ))) ; will probably stay at 64 for a while https://github.com/zeromq/libzmq/issues/1295
+      [(and (>= major 4) (>= minor 2))               64] ; will probably stay at 64 for a while https://github.com/zeromq/libzmq/issues/1295
+      [(and (=  major 4) (=  minor 1)  (>= patch 1)) 64]
+      [(and (=  major 4) (=  minor 1)  (=  patch 0)) 48]
+      [(and (=  major 4) (=  minor 0))               32]
+      [     (<= major 3)                             32] )))
 
 ; From zmq.h
 ; // union here ensures correct alignment on architectures that require it, e.g. SPARC
